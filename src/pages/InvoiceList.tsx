@@ -21,7 +21,7 @@ async function checkPayment(invoice: Invoice): Promise<{ paid: boolean; txHash?:
     const tokenAddr = TOKEN_ADDRESSES[invoice.token]?.toLowerCase();
     const expected = Math.floor(Number(invoice.amount) * 1_000_000);
     for (const item of data.items ?? []) {
-      const addr = (item.token?.address_hash ?? "").toLowerCase();
+      const addr = ((item.token as any)?.address_hash ?? "").toLowerCase();
       const decimals = Number(item.total?.decimals ?? 6);
       const value = Number(item.total?.value ?? 0) / Math.pow(10, decimals);
       const raw = Math.floor(value * 1_000_000);
