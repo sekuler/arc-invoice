@@ -23,7 +23,7 @@ export default function InvoiceDetail({ invoice, onClose }: Props) {
         <div style={{ display: "flex", gap: 6 }}>
           <button onClick={() => navigator.clipboard.writeText(link)} style={{ padding: "5px 10px", borderRadius: 7, border: "1px solid rgba(255,255,255,0.1)", background: "rgba(255,255,255,0.04)", color: "#94a3b8", fontSize: 11, fontWeight: 600, cursor: "pointer" }}>Copy Link</button>
           {invoice.status !== "paid" && (
-            <a href={link} target="_blank" rel="noopener noreferrer" style={{ padding: "5px 10px", borderRadius: 7, border: "none", background: "linear-gradient(135deg, #6366f1, #8b5cf6)", color: "#fff", fontSize: 11, fontWeight: 600, textDecoration: "none" }}>Send</a>
+            <a href={link} target="_blank" rel="noopener noreferrer" style={{ padding: "6px 14px", borderRadius: 20, border: "none", background: "linear-gradient(135deg, #7c3aed, #6366f1)", color: "#fff", ontSize: 11, fontWeight: 600, textDecoration: "none" }}>Send</a>
           )}
         </div>
       </div>
