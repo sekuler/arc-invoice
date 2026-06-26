@@ -31,7 +31,7 @@ export default function AIAgent({ onCreateInvoice }: { onCreateInvoice: (data: I
     setMessages(prev => [...prev, { role: "user", content: userMsg }]);
     setLoading(true);
     try {
-      const apiKey = import.meta.env.VITE_ANTHROPIC_KEY;
+      const apiKey = (import.meta as any).env.VITE_ANTHROPIC_KEY;
       const response = await fetch("https://api.anthropic.com/v1/messages", {
         method: "POST",
         headers: {
