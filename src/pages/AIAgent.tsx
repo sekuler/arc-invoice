@@ -117,7 +117,7 @@ export default function AIAgent({ onCreateInvoice }: { onCreateInvoice: (data: I
           placeholder="Create invoice for Arc Studio, 250 USDC, web design, 30 days..."
           style={{ flex: 1, background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 10, padding: "0.75rem 1rem", fontSize: 13, color: "#f1f5f9", outline: "none", fontFamily: "inherit" }} />
         <button onClick={send} disabled={loading || !input.trim()}
-          style={{ padding: "0.75rem 1.25rem", borderRadius: 10, border: "none", background: loading || !input.trim() ? "rgba(255,255,255,0.05)" : "linear-gradient(135deg, #6366f1, #8b5cf6)", color: "#fff", fontSize: 16, fontWeight: 700, cursor: loading || !input.trim() ? "not-allowed" : "pointer" }}>
+          style={{ padding: "0.75rem 1.25rem", borderRadius: 10, border: "none", background: loading || !input.trim() ? "rgba(255,255,255,0.05)" : "linear-gradient(135deg, #6366f1, #8b5cf6)", color: "#fff", fontSize: 13, fontWeight: 700, cursor: loading || !input.trim() ? "not-allowed" : "pointer" }}>
           â†’
         </button>
       </div>
