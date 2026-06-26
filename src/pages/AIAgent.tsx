@@ -118,7 +118,7 @@ export default function AIAgent({ onCreateInvoice }: { onCreateInvoice: (data: I
           style={{ flex: 1, background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 10, padding: "0.75rem 1rem", fontSize: 13, color: "#f1f5f9", outline: "none", fontFamily: "inherit" }} />
         <button onClick={send} disabled={loading || !input.trim()}
           style={{ padding: "0.75rem 1.25rem", borderRadius: 10, border: "none", background: loading || !input.trim() ? "rgba(255,255,255,0.05)" : "linear-gradient(135deg, #6366f1, #8b5cf6)", color: "#fff", fontSize: 13, fontWeight: 700, cursor: loading || !input.trim() ? "not-allowed" : "pointer" }}>
-          â†’
+          Send
         </button>
       </div>
       <p style={{ fontSize: 10, color: "#334155", marginTop: 8, textAlign: "center" }}>Powered by Claude AI Â· Arc Invoice</p>
