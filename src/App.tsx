@@ -7,21 +7,23 @@ import CreateInvoice from "./pages/CreateInvoice";
 import InvoiceList from "./pages/InvoiceList";
 import InvoiceDetail from "./pages/InvoiceDetail";
 import PayInvoice from "./pages/PayInvoice";
-import { type Invoice } from "./storage";
+import AIAgent from "./pages/AIAgent";
+import { type Invoice, type InvoiceToken } from "./storage";
 
 interface Wallet { provider: EIP1193Provider; address: string; walletName: string; }
-type Page = "dashboard" | "invoices" | "new";
+type Page = "dashboard" | "invoices" | "new" | "ai";
 
 function Sidebar({ page, onPage, wallet }: { page: Page; onPage: (p: Page) => void; wallet: Wallet | null }) {
   const NAV = [
-    { id: "dashboard" as Page, icon: "▦", label: "Dashboard" },
-    { id: "invoices"  as Page, icon: "📄", label: "Invoices" },
+    { id: "dashboard" as Page, icon: "D", label: "Dashboard" },
+    { id: "invoices" as Page, icon: "I", label: "Invoices" },
+    { id: "ai" as Page, icon: "AI", label: "AI Agent" },
   ];
   return (
     <div style={{ width: 210, background: "#060c1a", borderRight: "1px solid rgba(255,255,255,0.06)", display: "flex", flexDirection: "column", height: "100vh", flexShrink: 0 }}>
       <div style={{ padding: "1.1rem 1.25rem", borderBottom: "1px solid rgba(255,255,255,0.06)" }}>
         <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-          <div style={{ width: 28, height: 28, borderRadius: 7, background: "linear-gradient(135deg, #6366f1, #8b5cf6)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 13 }}>⬡</div>
+          <div style={{ width: 28, height: 28, borderRadius: 7, background: "linear-gradient(135deg, #6366f1, #8b5cf6)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 13, color: "#fff", fontWeight: 800 }}>A</div>
           <div>
             <div style={{ fontSize: 13, fontWeight: 800, color: "#f1f5f9" }}>ArcInvoice</div>
             <div style={{ fontSize: 8, color: "#6366f1", fontWeight: 700, letterSpacing: "1px" }}>TESTNET</div>
@@ -29,14 +31,16 @@ function Sidebar({ page, onPage, wallet }: { page: Page; onPage: (p: Page) => vo
         </div>
       </div>
       <div style={{ padding: "0.875rem 0.875rem 0.5rem" }}>
-        <button onClick={() => onPage("new")} style={{ width: "100%", padding: "0.6rem", borderRadius: 7, border: "none", background: "linear-gradient(135deg, #6366f1, #8b5cf6)", color: "#fff", fontSize: 12, fontWeight: 700, cursor: "pointer", boxShadow: "0 0 14px rgba(99,102,241,0.3)" }}>
+        <button onClick={() => onPage("new")} style={{ width: "100%", padding: "0.6rem", borderRadius: 7, border: "none", background: "linear-gradient(135deg, #6366f1, #8b5cf6)", color: "#fff", fontSize: 12, fontWeight: 700, cursor: "pointer" }}>
           + New Invoice
         </button>
       </div>
       <nav style={{ flex: 1, padding: "0.25rem 0.625rem" }}>
         {NAV.map(({ id, icon, label }) => (
           <button key={id} onClick={() => onPage(id)} style={{ width: "100%", display: "flex", alignItems: "center", gap: 9, padding: "0.6rem 0.75rem", borderRadius: 7, border: "none", background: page === id || (page === "new" && id === "invoices") ? "rgba(99,102,241,0.12)" : "transparent", color: page === id || (page === "new" && id === "invoices") ? "#818cf8" : "#64748b", fontSize: 13, fontWeight: page === id ? 700 : 400, cursor: "pointer", marginBottom: 2, textAlign: "left", borderLeft: page === id ? "2px solid #6366f1" : "2px solid transparent" }}>
-            <span>{icon}</span>{label}
+            <span style={{ fontSize: 11, fontWeight: 700, background: "rgba(255,255,255,0.06)", padding: "2px 5px", borderRadius: 4 }}>{icon}</span>
+            {label}
+            {id === "ai" && <span style={{ marginLeft: "auto", fontSize: 9, background: "rgba(99,102,241,0.2)", color: "#818cf8", padding: "1px 5px", borderRadius: 4, fontWeight: 700 }}>NEW</span>}
           </button>
         ))}
       </nav>
@@ -63,20 +67,34 @@ function MainApp() {
   const [wallet, setWallet] = useState<Wallet | null>(null);
   const [page, setPage] = useState<Page>("dashboard");
   const [selected, setSelected] = useState<Invoice | null>(null);
+  const [prefillData, setPrefillData] = useState<Record<string, string> | null>(null);
 
   function handlePage(p: Page) { setPage(p); if (p !== "invoices") setSelected(null); }
+
+  function handleAIInvoice(data: { title?: string; clientName?: string; amount?: string; token?: InvoiceToken; dueDate?: string; description?: string; memo?: string }) {
+    setPrefillData({
+      title: data.title ?? "",
+      clientName: data.clientName ?? "",
+      amount: data.amount ?? "",
+      token: data.token ?? "USDC",
+      dueDate: data.dueDate ?? "",
+      description: data.description ?? "",
+      memo: data.memo ?? "",
+    });
+    setPage("new");
+  }
 
   if (!wallet) return (
     <div style={{ minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center", background: "linear-gradient(135deg, #06080f 0%, #0d1128 50%, #0a0d1f 100%)" }}>
       <div style={{ textAlign: "center", maxWidth: 460, padding: "0 1.5rem" }}>
         <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 10, marginBottom: 28 }}>
-          <div style={{ width: 42, height: 42, borderRadius: 12, background: "linear-gradient(135deg, #6366f1, #8b5cf6)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 20, boxShadow: "0 0 20px rgba(99,102,241,0.4)" }}>⬡</div>
+          <div style={{ width: 42, height: 42, borderRadius: 12, background: "linear-gradient(135deg, #6366f1, #8b5cf6)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 20, color: "#fff", fontWeight: 800, boxShadow: "0 0 20px rgba(99,102,241,0.4)" }}>A</div>
           <div style={{ fontSize: 22, fontWeight: 800, color: "#f1f5f9" }}>ArcInvoice</div>
         </div>
-        <h1 style={{ fontSize: 32, fontWeight: 800, color: "#f1f5f9", marginBottom: 10, letterSpacing: "-0.5px" }}>
+        <h1 style={{ fontSize: 32, fontWeight: 800, color: "#f1f5f9", marginBottom: 10 }}>
           Get paid in <span style={{ background: "linear-gradient(135deg, #6366f1, #8b5cf6)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent" }}>stablecoins</span>
         </h1>
-        <p style={{ fontSize: 14, color: "#64748b", marginBottom: 28, lineHeight: 1.7 }}>Create professional invoices and get paid in USDC or EURC on Arc Testnet. No banks, no borders.</p>
+        <p style={{ fontSize: 14, color: "#64748b", marginBottom: 28, lineHeight: 1.7 }}>Create professional invoices and get paid in USDC or EURC on Arc Testnet.</p>
         <WalletConnect onConnected={(p, a, n) => setWallet({ provider: p, address: a, walletName: n })} label="Connect Wallet to Get Started" />
         <div style={{ display: "flex", gap: 16, justifyContent: "center", marginTop: 18 }}>
           {[{ l: "arc.io", h: "https://www.arc.io" }, { l: "Community", h: "https://community.arc.io" }, { l: "Faucet", h: "https://faucet.circle.com" }].map(({ l, h }) => (
@@ -93,11 +111,12 @@ function MainApp() {
       <div style={{ flex: 1, display: "flex", overflow: "hidden" }}>
         <div style={{ flex: 1, overflow: "hidden" }}>
           {page === "dashboard" && <Dashboard />}
-          {(page === "invoices") && (
-            <InvoiceList onSelect={inv => { setSelected(inv); }} selectedId={selected?.id} onNew={() => handlePage("new")} />
+          {page === "ai" && <AIAgent onCreateInvoice={handleAIInvoice} />}
+          {page === "invoices" && (
+            <InvoiceList onSelect={inv => setSelected(inv)} selectedId={selected?.id} onNew={() => handlePage("new")} />
           )}
           {page === "new" && (
-            <CreateInvoice wallet={wallet} onCreated={() => handlePage("invoices")} onCancel={() => handlePage("invoices")} />
+            <CreateInvoice wallet={wallet} onCreated={() => handlePage("invoices")} onCancel={() => handlePage("invoices")} prefillData={prefillData} />
           )}
         </div>
         {selected && page === "invoices" && (

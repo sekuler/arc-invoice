@@ -1,4 +1,4 @@
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import type { EIP1193Provider } from "viem";
 import { nanoid } from "nanoid";
 import { saveInvoice, encodeInvoice, getNextNumber, type InvoiceToken, type LineItem } from "../storage";
@@ -11,16 +11,50 @@ interface Props {
   wallet: { provider: EIP1193Provider; address: string; walletName: string };
   onCreated: () => void;
   onCancel: () => void;
+  prefillData?: Record<string, string> | null;
 }
 
-export default function CreateInvoice({ wallet, onCreated, onCancel }: Props) {
-  const [form, setForm] = useState({ title: "", description: "", token: "USDC" as InvoiceToken, clientName: "", clientEmail: "", dueDate: "", memo: "" });
-  const [items, setItems] = useState<LineItem[]>([{ id: nanoid(4), description: "", qty: 1, price: 0 }]);
+export default function CreateInvoice({ wallet, onCreated, onCancel, prefillData }: Props) {
+  const [form, setForm] = useState({
+    title: prefillData?.title ?? "",
+    description: prefillData?.description ?? "",
+    token: (prefillData?.token as InvoiceToken) ?? "USDC",
+    clientName: prefillData?.clientName ?? "",
+    clientEmail: "",
+    dueDate: prefillData?.dueDate ?? "",
+    memo: prefillData?.memo ?? "",
+  });
+  const [items, setItems] = useState<LineItem[]>([{
+    id: nanoid(4),
+    description: prefillData?.title ?? "",
+    qty: 1,
+    price: prefillData?.amount ? Number(prefillData.amount) : 0
+  }]);
   const [step, setStep] = useState<"idle" | "s1" | "s2" | "s3" | "done">("idle");
   const [link, setLink] = useState("");
   const [copied, setCopied] = useState(false);
   const invNum = useRef(getNextNumber()).current;
   const total = items.reduce((s, i) => s + i.qty * i.price, 0);
+
+  useEffect(() => {
+    if (prefillData) {
+      setForm({
+        title: prefillData.title ?? "",
+        description: prefillData.description ?? "",
+        token: (prefillData.token as InvoiceToken) ?? "USDC",
+        clientName: prefillData.clientName ?? "",
+        clientEmail: "",
+        dueDate: prefillData.dueDate ?? "",
+        memo: prefillData.memo ?? "",
+      });
+      setItems([{
+        id: nanoid(4),
+        description: prefillData.title ?? "",
+        qty: 1,
+        price: prefillData.amount ? Number(prefillData.amount) : 0
+      }]);
+    }
+  }, [prefillData]);
 
   function upd(f: string, v: string) { setForm(p => ({ ...p, [f]: v })); }
   function addItem() { setItems(p => [...p, { id: nanoid(4), description: "", qty: 1, price: 0 }]); }
@@ -109,21 +143,26 @@ export default function CreateInvoice({ wallet, onCreated, onCancel }: Props) {
     );
   }
 
-  const S = { label: { fontSize: 12, color: "#94a3b8", fontWeight: 500 } as React.CSSProperties, input: { width: "100%", background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 8, padding: "0.65rem 0.875rem", fontSize: 13, color: "#f1f5f9", outline: "none", fontFamily: "inherit", boxSizing: "border-box" } as React.CSSProperties };
+  const S = {
+    label: { fontSize: 12, color: "#94a3b8", fontWeight: 500 } as React.CSSProperties,
+    input: { width: "100%", background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 8, padding: "0.65rem 0.875rem", fontSize: 13, color: "#f1f5f9", outline: "none", fontFamily: "inherit", boxSizing: "border-box" } as React.CSSProperties
+  };
 
   return (
     <div style={{ height: "100%", overflowY: "auto" }}>
       <div style={{ maxWidth: 900, margin: "0 auto", padding: "1.5rem" }}>
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 20 }}>
           <div>
-            <h2 style={{ fontSize: 18, fontWeight: 800, color: "#f1f5f9" }}>New Invoice</h2>
+            <h2 style={{ fontSize: 18, fontWeight: 800, color: "#f1f5f9" }}>
+              New Invoice
+              {prefillData && <span style={{ fontSize: 11, color: "#818cf8", marginLeft: 8, background: "rgba(99,102,241,0.1)", padding: "2px 8px", borderRadius: 4 }}>AI filled</span>}
+            </h2>
             <div style={{ fontSize: 12, color: "#6366f1", marginTop: 2 }}>{invNum} · auto-generated</div>
           </div>
           <button onClick={onCancel} style={{ background: "none", border: "none", color: "#475569", cursor: "pointer", fontSize: 13 }}>✕ Cancel</button>
         </div>
 
         <div style={{ display: "grid", gridTemplateColumns: "1fr 320px", gap: 20, alignItems: "start" }}>
-          {/* Form */}
           <div style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.07)", borderRadius: 12, padding: "1.5rem", display: "flex", flexDirection: "column", gap: 14 }}>
 
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", background: "rgba(99,102,241,0.08)", border: "1px solid rgba(99,102,241,0.2)", borderRadius: 8, padding: "8px 12px" }}>
@@ -143,7 +182,6 @@ export default function CreateInvoice({ wallet, onCreated, onCancel }: Props) {
               <textarea value={form.description} onChange={e => upd("description", e.target.value)} rows={2} placeholder="Describe the work..." style={{ ...S.input, resize: "none" } as React.CSSProperties} />
             </div>
 
-            {/* Line items */}
             <div style={{ display: "flex", flexDirection: "column", gap: 5 }}>
               <div style={{ display: "flex", justifyContent: "space-between" }}>
                 <label style={S.label}>Line Items *</label>
@@ -171,7 +209,6 @@ export default function CreateInvoice({ wallet, onCreated, onCancel }: Props) {
               </div>
             </div>
 
-            {/* Token */}
             <div style={{ display: "flex", flexDirection: "column", gap: 5 }}>
               <label style={S.label}>Token</label>
               <div style={{ display: "flex", gap: 8 }}>
@@ -183,7 +220,6 @@ export default function CreateInvoice({ wallet, onCreated, onCancel }: Props) {
               </div>
             </div>
 
-            {/* Client */}
             <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
               <div style={{ display: "flex", flexDirection: "column", gap: 5 }}>
                 <label style={S.label}>Client Name *</label>
@@ -195,7 +231,6 @@ export default function CreateInvoice({ wallet, onCreated, onCancel }: Props) {
               </div>
             </div>
 
-            {/* Due date */}
             <div style={{ display: "flex", flexDirection: "column", gap: 5 }}>
               <label style={S.label}>Due Date *</label>
               <div style={{ display: "flex", gap: 6, marginBottom: 6, flexWrap: "wrap" }}>
@@ -206,7 +241,6 @@ export default function CreateInvoice({ wallet, onCreated, onCancel }: Props) {
               <input type="date" value={form.dueDate} onChange={e => upd("dueDate", e.target.value)} style={S.input} />
             </div>
 
-            {/* Memo */}
             <div style={{ display: "flex", flexDirection: "column", gap: 5 }}>
               <label style={S.label}>Payment Memo <span style={{ fontSize: 10, color: "#475569" }}>Arc memo field · optional</span></label>
               <input value={form.memo} onChange={e => upd("memo", e.target.value)} placeholder="e.g. Order #204, Project Alpha" style={S.input} />
@@ -218,7 +252,6 @@ export default function CreateInvoice({ wallet, onCreated, onCancel }: Props) {
             </button>
           </div>
 
-          {/* Live Preview */}
           <div style={{ background: "rgba(8,11,20,0.9)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 12, padding: "1.25rem", position: "sticky", top: 0 }}>
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12 }}>
               <div style={{ fontSize: 9, color: "#6366f1", fontWeight: 700, letterSpacing: "1.5px" }}>LIVE PREVIEW</div>
@@ -232,7 +265,7 @@ export default function CreateInvoice({ wallet, onCreated, onCancel }: Props) {
             <div style={{ borderTop: "1px solid rgba(255,255,255,0.06)", paddingTop: 8, marginBottom: 8 }}>
               {items.filter(i => i.description).map(item => (
                 <div key={item.id} style={{ display: "flex", justifyContent: "space-between", marginBottom: 4 }}>
-                  <span style={{ fontSize: 11, color: "#e2e8f0" }}>{item.description}{item.qty > 1 ? " ×" + item.qty : ""}</span>
+                  <span style={{ fontSize: 11, color: "#e2e8f0" }}>{item.description}{item.qty > 1 ? " x" + item.qty : ""}</span>
                   <span style={{ fontSize: 11, color: "#f1f5f9", fontWeight: 600 }}>{(item.qty * item.price).toFixed(2)}</span>
                 </div>
               ))}
